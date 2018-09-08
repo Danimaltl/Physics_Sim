@@ -346,8 +346,8 @@ void dcRender::CubeRenderer::init(glm::vec3 center, Shader* shader) {
 	//	glm::vec3(0.0f, 0.0f, 0.0f),
 	//	glm::vec3(0.0f, 0.0f, 1.0f)
 	//);
-	view = glm::rotate(view, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//view = glm::translate(view, glm::vec3(0.0f, -10.0f, 0.0f));
+	//view = glm::rotate(view, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
 	m_shader->SetMatrix4("view", view);
 
 	glm::mat4 proj = glm::mat4(1);
