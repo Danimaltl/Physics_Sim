@@ -35,14 +35,17 @@ public:
 	PhysicsComponent entities[2];
 private:
 	glm::vec3 resultantForce = glm::vec3(0, 0, 0);
-	float dragCoefficient = 0.2f;
+	float dragCoefficient = 0.5f;
+	float stiffness = 8.0f;
+	float damping = 0.1f;
+	float restLength = 1.0f;
 };
 
 void PhysicsSystem::update(float dt) {
 	resultantForce = glm::vec3(0, 0, 0);
 	ApplyForce(ComputeGravity(entities[1]));
 	ApplyForce(ComputeDrag(entities[1]));
-	//ApplyForce(ComputeSpring(&entities[0], &entities[1]));
+	ApplyForce(ComputeSpring(&entities[0], &entities[1]));
 
 	glm::vec3 acceleration = resultantForce / entities[1].mass;
 	entities[1].currPos += entities[1].velocity * dt;
@@ -60,6 +63,22 @@ glm::vec3 PhysicsSystem::ComputeGravity(const PhysicsComponent& c) {
 
 glm::vec3 PhysicsSystem::ComputeDrag(const PhysicsComponent& c) {
 	return -(c.velocity * dragCoefficient);
+}
+
+glm::vec3 PhysicsSystem::ComputeSpring(PhysicsComponent* a, PhysicsComponent* b) {
+	glm::vec3 direction = a->currPos - b->currPos;
+	glm::vec3 force = glm::vec3(0, 0, 0);
+	if (direction != glm::vec3(0, 0, 0)) {
+		float length = dcMath::Magnitude(direction);
+		dcMath::Normalize(direction);
+
+		force = -stiffness * ((length - restLength) * direction);
+
+		force += -damping * dcMath::Dot(a->velocity - b->velocity, direction);
+
+		return -force;
+	}
+	return force;
 }
 
 class Cube {
@@ -137,7 +156,7 @@ int main()
 	PhysicsSystem physicsSystem;
 
 	Cube cube;
-	cube.init(glm::vec3(0.0f, 0.0f, 0.0f), &physicsSystem.entities[1]);
+	cube.init(glm::vec3(0.0f, -2.0f, 0.0f), &physicsSystem.entities[1]);
 
 	Cube cube2;
 	cube2.init(glm::vec3(0.0f, 2.0f, 0.0f), &physicsSystem.entities[0], glm::vec3(1.0f, 0.0f, 0.0f));
