@@ -22,6 +22,12 @@
     <ClCompile Include="Background.cpp" />
     <ClCompile Include="dcMath.cpp" />
     <ClCompile Include="dcRenderer.cpp" />
+    <ClCompile Include="imgui.cpp" />
+    <ClCompile Include="imgui_demo.cpp" />
+    <ClCompile Include="imgui_draw.cpp" />
+    <ClCompile Include="imgui_impl_glfw.cpp" />
+    <ClCompile Include="imgui_impl_opengl3.cpp" />
+    <ClCompile Include="imgui_widgets.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -29,6 +35,14 @@
     <ClInclude Include="dcMath.h" />
     <ClInclude Include="dcRenderer.h" />
     <ClInclude Include="Globals.h" />
+    <ClInclude Include="imconfig.h" />
+    <ClInclude Include="imgui.h" />
+    <ClInclude Include="imgui_impl_glfw.h" />
+    <ClInclude Include="imgui_impl_opengl3.h" />
+    <ClInclude Include="imgui_internal.h" />
+    <ClInclude Include="imstb_rectpack.h" />
+    <ClInclude Include="imstb_textedit.h" />
+    <ClInclude Include="imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cubeShape.frag" />
@@ -92,11 +106,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Libraries\freetype\include\;C:\Libraries\glm-stable;C:\Libraries\glew-2.1.0\include;C:\Libraries\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Libraries\glfw-3.2.1.bin.WIN32\include;C:\Libraries\freetype\include\;C:\Libraries\glm-stable;C:\Libraries\glew-2.1.0\include;C:\Libraries\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>sfml-main-d.lib;sfml-system-d.lib;sfml-audio-d.lib;sfml-window-d.lib;sfml-network-d.lib;sfml-graphics-d.lib;openal32.lib;%(AdditionalDependencies);opengl32.lib;glew32s.lib;glew32.lib;freetype.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Libraries\freetype\win32;C:\Libraries\glew-2.1.0\lib\Release\Win32;C:\Libraries\SFML-2.4.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-main-d.lib;sfml-system-d.lib;sfml-audio-d.lib;sfml-window-d.lib;sfml-network-d.lib;sfml-graphics-d.lib;openal32.lib;%(AdditionalDependencies);opengl32.lib;glew32s.lib;glew32.lib;glfw3.lib;freetype.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Libraries\glfw-3.2.1.bin.WIN32\lib-vc2015;C:\Libraries\freetype\win32;C:\Libraries\glew-2.1.0\lib\Release\Win32;C:\Libraries\SFML-2.4.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

@@ -1,9 +1,15 @@
 #pragma once
-#define GLEW_STATIC
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <stdio.h>
+
+//#define GLEW_STATIC
 #include <GL/glew.h>
+#include <GLFW/glfw3.h> 
 //#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
+//#include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>
 #include <SFML/OpenGL.hpp>
@@ -28,7 +34,7 @@
 #define M_PI 3.14159265358979323846
 #endif // !M_PI
 
-extern sf::Window window;
+//extern sf::Window window;
 
 extern unsigned int sWidth;
 extern unsigned int sHeight;
