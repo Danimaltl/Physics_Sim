@@ -351,12 +351,13 @@ void dcRender::CubeRenderer::init(glm::vec3 center, Shader* shader) {
 	m_shader->SetMatrix4("view", view);
 
 	glm::mat4 proj = glm::mat4(1);
-	proj = glm::perspective(glm::radians(45.0f), (float)sWidth / (float)sHeight, 0.1f, 100.0f);
+	proj = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 	m_shader->SetMatrix4("proj", proj);
 }
 
 void dcRender::CubeRenderer::draw(glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec3 color) {
 	m_shader->use();
+
 	glm::mat4 model(1);
 
 	//translate to world position
@@ -397,7 +398,7 @@ dcRender::TextRenderer::~TextRenderer() {
 void dcRender::TextRenderer::init() {
 
 	m_shader.loadFromFile("shaders/text.vert", "shaders/text.frag");
-	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(sWidth), 0.0f, static_cast<GLfloat>(sHeight));
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(SCREEN_WIDTH), 0.0f, static_cast<GLfloat>(SCREEN_HEIGHT));
 	m_shader.use();
 	m_shader.SetMatrix4("projection", projection);
 
@@ -475,7 +476,7 @@ void dcRender::TextRenderer::init() {
 }
 
 void dcRender::TextRenderer::draw(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color) {
-	y = (GLfloat)sHeight - y;
+	y = (GLfloat)SCREEN_HEIGHT - y;
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);

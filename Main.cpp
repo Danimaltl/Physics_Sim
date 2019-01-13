@@ -2,8 +2,8 @@
 #include "dcRenderer.h"
 #include "dcMath.h"
 
-unsigned int sWidth = 1280;
-unsigned int sHeight = 720;
+unsigned int SCREEN_WIDTH = 1280;
+unsigned int SCREEN_HEIGHT = 720;
 
 //Window to be displayed throughout game
 //sf::Window window;
@@ -16,8 +16,8 @@ struct Transform {
 
 struct PhysicsComponent {
 	glm::vec3 currPos = glm::vec3(0,0,0);
-	glm::vec3 oldPos = glm::vec3(0, 0, 0);
-	glm::vec3 velocity = glm::vec3(0, 0, 0);
+	glm::vec3 oldPos = glm::vec3(0,0,0);
+	glm::vec3 velocity = glm::vec3(0,0,0);
 	float mass = 0;
 	bool active = true;
 };
@@ -87,7 +87,7 @@ public:
 	~Cube();
 	void init(glm::vec3 position, PhysicsComponent* p,glm::vec3 color);
 	void update(float dt);
-	void draw();
+	void draw(glm::mat4 view);
 	void destroy();
 
 private:
@@ -130,7 +130,8 @@ void Cube::update(float dt) {
 	m_transform.position = m_phys->currPos;
 }
 
-void Cube::draw() {
+void Cube::draw(glm::mat4 view) {
+	m_shader.SetMatrix4("view", view);
 	m_renderer.draw(m_transform.position, m_transform.rotation, m_transform.scale, m_color);
 }
 
@@ -158,10 +159,10 @@ int main()
 	// GL 3.0 + GLSL 130
 	const char* glsl_version = "#version 130";
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
 	// Create window with graphics context
-	GLFWwindow* window = glfwCreateWindow(sWidth, sHeight, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Physics Sim", NULL, NULL);
 	if (window == NULL)
 		return 1;
 	glfwMakeContextCurrent(window);
@@ -210,6 +211,12 @@ int main()
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
 
+	double xmouse, ymouse;
+
+	Transform camera;
+	camera.position = glm::vec3(0, 0, -10);
+	camera.rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
+
 	while (!glfwWindowShouldClose(window))
 	{   
 		// Poll and handle events (inputs, window resize, etc.)
@@ -218,8 +225,55 @@ int main()
 		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
 		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 		glfwPollEvents();
-		
 		float dt = clock.restart().asSeconds();
+
+		glfwGetCursorPos(window, &xmouse, &ymouse);
+
+		float speed = 2;
+
+		if (glfwGetKey(window, GLFW_KEY_W) || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+			camera.position += (dcMath::ForwardVector(camera.rotation) * speed * dt);
+		}
+		else if (glfwGetKey(window, GLFW_KEY_S) || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+			camera.position -= (dcMath::ForwardVector(camera.rotation) * speed * dt);
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+			camera.position += (dcMath::LeftVector(camera.rotation) * speed * dt);
+		}
+		else if (glfwGetKey(window, GLFW_KEY_D) || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+			camera.position -= (dcMath::LeftVector(camera.rotation) * speed * dt);
+		}
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+			camera.position -= (dcMath::UpVector(camera.rotation) * speed * dt);
+		}
+		else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+			camera.position += (dcMath::UpVector(camera.rotation) * speed * dt);
+		}
+
+		bool mouseOne = false;
+		bool mouseTwo = false;
+		if (glfwGetMouseButton(window, 0) == GLFW_PRESS) {
+			mouseOne = true;
+		}
+		else {
+			mouseOne = false;
+		}
+		if (glfwGetMouseButton(window, 1) == GLFW_PRESS) {
+			mouseTwo = true;
+		}
+		else {
+			mouseTwo = false;
+		}
+
+		if (mouseTwo) {
+			glfwSetCursorPos(window, (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 2));
+
+		}
+
+		glm::mat4 view = glm::mat4(1);
+		//view = glm::rotate(view, camera.rotation);
+		view = glm::translate(view, camera.position);
+
 		physicsSystem.update(dt);
 		cube.update(dt);
 		cube2.update(dt);
@@ -253,6 +307,10 @@ int main()
 			ImGui::Text("counter = %d", counter);
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::Text("Mouse position is: %.3f , %.3f", xmouse, ymouse);
+			ImGui::Text("Camera: %.3f, %.3f, %.3f", camera.position.x, camera.position.y, camera.position.z);
+			ImGui::Text("Left Mouse: %s", mouseOne ? "true" : "false");
+			ImGui::Text("Right Mouse: %s", mouseTwo ? "true" : "false");
 			ImGui::End();
 		}
 
@@ -275,8 +333,8 @@ int main()
 		glViewport(0, 0, display_w, display_h);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		cube.draw();
-		cube2.draw();
+		cube.draw(view);
+		cube2.draw(view);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwMakeContextCurrent(window);

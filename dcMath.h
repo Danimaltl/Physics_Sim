@@ -20,4 +20,7 @@ namespace dcMath {
 	glm::vec2 AngleToVector(float angle);
 
 	float Map(float value, float start1, float  stop1, float  start2, float stop2);
+	glm::vec3 ForwardVector(glm::quat rotation);
+	glm::vec3 LeftVector(glm::quat rotation);
+	glm::vec3 UpVector(glm::quat rotation);
 }

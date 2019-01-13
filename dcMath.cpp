@@ -51,3 +51,27 @@ float dcMath::Map(float value, float start1, float  stop1, float  start2, float 
 	float slope = (stop2 - start2) / (stop1 - start1);
 	return start2 + slope * (value - start1);
 }
+
+glm::vec3 dcMath::ForwardVector(glm::quat rotation) {
+	glm::vec3 forward;
+	forward.x = 2 * (rotation.x*rotation.y + rotation.w*rotation.y);
+	forward.y = 2 * (rotation.y*rotation.z + rotation.w*rotation.x);
+	forward.z = 1 - 2 * (rotation.x*rotation.x - rotation.y*rotation.y);
+	return forward;
+}
+
+glm::vec3 dcMath::LeftVector(glm::quat rotation) {
+	glm::vec3 left;
+	left.x = 1 - 2 * (rotation.y*rotation.y - rotation.z*rotation.z);
+	left.y = 2 * (rotation.x*rotation.y + rotation.w*rotation.z);
+	left.z = 2 * (rotation.x*rotation.z + rotation.w*rotation.y);
+	return left;
+}
+
+glm::vec3 dcMath::UpVector(glm::quat rotation) {
+	glm::vec3 up;
+	up.x = 2 * (rotation.x*rotation.y + rotation.w*rotation.z);
+	up.y = 1 - 2 * (rotation.x*rotation.x - rotation.z*rotation.z);
+	up.z = 2 * (rotation.y*rotation.z + rotation.w*rotation.x);
+	return up;
+}

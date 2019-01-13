@@ -36,6 +36,6 @@
 
 //extern sf::Window window;
 
-extern unsigned int sWidth;
-extern unsigned int sHeight;
+extern unsigned int SCREEN_WIDTH;
+extern unsigned int SCREEN_HEIGHT;
 
