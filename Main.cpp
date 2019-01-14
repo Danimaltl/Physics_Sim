@@ -144,6 +144,76 @@ static void glfw_error_callback(int error, const char* description)
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+class Camera {
+public:
+	glm::vec3 position;
+	void SetOrientation(float rightAngle, float upAngle);
+	void OffsetOrientation(float rightAngle, float upAngle);
+	glm::mat4 GetOrientation() const;
+	glm::quat GetOrientationQuat() const;
+	glm::vec3 GetFace() const;
+	glm::vec3 GetRight() const;
+	glm::vec3 GetUp() const;
+	float GetUpAngle() const;
+	float GetRightAngle() const;
+	float m_upAngle = 0.0f;
+	float m_rightAngle = 0.0f;
+private:
+
+
+};
+
+void Camera::SetOrientation(float rightAngle, float upAngle)//in degrees
+{
+	m_rightAngle = rightAngle;
+	m_upAngle = upAngle;
+}
+
+void Camera::OffsetOrientation(float rightAngle, float upAngle)//in degrees
+{
+	m_rightAngle += rightAngle;
+	m_upAngle += upAngle;
+}
+
+glm::mat4 Camera::GetOrientation() const
+{
+	glm::quat q = glm::angleAxis(glm::radians(-m_upAngle), glm::vec3(1, 0, 0));
+	q *= glm::angleAxis(glm::radians(m_rightAngle), glm::vec3(0, 1, 0));
+	return glm::mat4_cast(q);
+}
+
+glm::quat Camera::GetOrientationQuat() const
+{
+	glm::quat q = glm::angleAxis(glm::radians(-m_upAngle), glm::vec3(1, 0, 0));
+	q *= glm::angleAxis(glm::radians(m_rightAngle), glm::vec3(0, 1, 0));
+	return q;
+}
+
+glm::vec3 Camera::GetFace() const {
+	glm::vec3 front;
+	front.x = cos(glm::radians(m_upAngle)) * sin(glm::radians(m_rightAngle));
+	front.y = sin(glm::radians(m_upAngle));
+	front.z = cos(glm::radians(m_upAngle)) * cos(glm::radians(m_rightAngle));
+	return glm::normalize(front);
+}
+
+glm::vec3 Camera::GetUp() const {
+	return glm::vec3(0.0f, 1.0f, 0.0f); //Since we don't roll yet.
+}
+
+glm::vec3 Camera::GetRight() const {
+	return glm::cross(GetFace(), GetUp());
+}
+
+float Camera::GetUpAngle() const {
+	return m_upAngle;
+}
+
+float Camera::GetRightAngle() const {
+	return m_rightAngle;
+}
+
+
 int main()
 {
 	//sf::ContextSettings settings;
@@ -213,9 +283,9 @@ int main()
 
 	double xmouse, ymouse;
 
-	Transform camera;
+	Camera camera;
 	camera.position = glm::vec3(0, 0, -10);
-	camera.rotation = glm::quat(glm::vec3(0.0f, 0.05f, 0.0f));
+
 
 	float yaw = 0.0f;
 	float pitch = 0.0f;
@@ -240,22 +310,22 @@ int main()
 		float speed = 2;
 
 		if (glfwGetKey(window, GLFW_KEY_W) || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-			camera.position += (dcMath::ForwardVector(camera.rotation) * speed * dt);
+			camera.position += (camera.GetFace() * speed * dt);
 		}
 		else if (glfwGetKey(window, GLFW_KEY_S) || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-			camera.position -= (dcMath::ForwardVector(camera.rotation) * speed * dt);
+			camera.position -= (camera.GetFace() * speed * dt);
 		}
 		if (glfwGetKey(window, GLFW_KEY_A) || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-			camera.position += (dcMath::LeftVector(camera.rotation) * speed * dt);
+			camera.position -= (camera.GetRight() * speed * dt);
 		}
 		else if (glfwGetKey(window, GLFW_KEY_D) || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-			camera.position -= (dcMath::LeftVector(camera.rotation) * speed * dt);
+			camera.position += (camera.GetRight() * speed * dt);
 		}
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-			camera.position -= (dcMath::UpVector(camera.rotation) * speed * dt);
+			camera.position -= (camera.GetUp() * speed * dt);
 		}
 		else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-			camera.position += (dcMath::UpVector(camera.rotation) * speed * dt);
+			camera.position += (camera.GetUp() * speed * dt);
 		}
 
 		bool mouseOne = false;
@@ -284,11 +354,11 @@ int main()
 				firstMouse = false;
 			}
 			float xoffset = (float)xmouse - lastX;
-			float yoffset = (float)ymouse - lastY; // reversed since y-coordinates go from bottom to top
+			float yoffset = lastY - (float)ymouse; // reversed since y-coordinates go from bottom to top
 			lastX = (float)xmouse;
 			lastY = (float)ymouse;
 
-			float sensitivity = 0.0020f; // change this value to your liking
+			float sensitivity = 0.20f; // change this value to your liking
 			xoffset *= sensitivity;
 			yoffset *= sensitivity;
 
@@ -301,10 +371,12 @@ int main()
 			if (pitch < -89.0f)
 				pitch = -89.0f;
 
-			//For a FPS camera we can omit roll
-			glm::quat orientation = glm::quat(glm::vec3(pitch, yaw, 0));
-			camera.rotation = camera.rotation * orientation;
-			camera.rotation = glm::normalize(camera.rotation);
+			////For a FPS camera we can omit roll
+			//glm::quat orientation = glm::quat(glm::vec3(pitch, yaw, 0));
+			//camera.rotation = camera.rotation * orientation;
+			//camera.rotation = glm::normalize(camera.rotation);
+
+			camera.OffsetOrientation(yaw, pitch);
 
 			pitch = 0.0f;
 			yaw = 0.0f;
@@ -313,7 +385,7 @@ int main()
 			firstMouse = true;
 		}
 
-		view = (glm::mat4_cast(camera.rotation)) * glm::translate(view, camera.position);
+		view = (camera.GetOrientation() * glm::translate(view, camera.position));
 
 		physicsSystem.update(dt);
 		cube.update(dt);
@@ -339,7 +411,7 @@ int main()
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			ImGui::Checkbox("Another Window", &show_another_window);
 
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("float", &camera.m_rightAngle, 0.0f, 90.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
 			if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -352,10 +424,12 @@ int main()
 			ImGui::Text("Camera position: %.3f, %.3f, %.3f", camera.position.x, camera.position.y, camera.position.z);
 			if (ImGui::Button("Reset"))
 				camera.position = glm::vec3(0,0,-10);
-			ImGui::Text("Camera rotation: %.3f, %.3f, %.3f, %.3f", camera.rotation.x, camera.rotation.y, camera.rotation.z, camera.rotation.w);
-			if (ImGui::Button("Boop"))
-				camera.rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
-			ImGui::Text("Pitch: %.3f, Yaw: %.3f", pitch, yaw);
+			ImGui::Text("Camera rotation: %.3f, %.3f, %.3f, %.3f", camera.GetOrientationQuat().x, camera.GetOrientationQuat().y, camera.GetOrientationQuat().z, camera.GetOrientationQuat().w);
+			//if (ImGui::Button("Boop"))
+			//	camera.rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
+			glm::vec3 face = camera.GetFace();
+			ImGui::Text("Face vector: %.3f, %.3f, %.3f", face.x, face.y, face.z);
+			ImGui::Text("UpAngle: %.3f, RightAngle: %.3f", camera.GetUpAngle(), camera.GetRightAngle());
 			ImGui::Text("Left Mouse: %s", mouseOne ? "true" : "false");
 			ImGui::Text("Right Mouse: %s", mouseTwo ? "true" : "false");
 			ImGui::End();
