@@ -215,7 +215,15 @@ int main()
 
 	Transform camera;
 	camera.position = glm::vec3(0, 0, -10);
-	camera.rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
+	camera.rotation = glm::quat(glm::vec3(0.0f, 0.05f, 0.0f));
+
+	float yaw = 0.0f;
+	float pitch = 0.0f;
+
+	float lastX = SCREEN_WIDTH / 2;
+	float lastY = SCREEN_HEIGHT / 2;
+
+	bool firstMouse = true;
 
 	while (!glfwWindowShouldClose(window))
 	{   
@@ -265,14 +273,47 @@ int main()
 			mouseTwo = false;
 		}
 
+		glm::mat4 view = glm::mat4(1);
+		glm::mat4 rotate = glm::mat4(1);
+		glm::vec3 cameraFront;
 		if (mouseTwo) {
-			glfwSetCursorPos(window, (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 2));
+			if (firstMouse) // this bool variable is initially set to true
+			{
+				lastX = (float)xmouse;
+				lastY = (float)ymouse;
+				firstMouse = false;
+			}
+			float xoffset = (float)xmouse - lastX;
+			float yoffset = (float)ymouse - lastY; // reversed since y-coordinates go from bottom to top
+			lastX = (float)xmouse;
+			lastY = (float)ymouse;
 
+			float sensitivity = 0.0020f; // change this value to your liking
+			xoffset *= sensitivity;
+			yoffset *= sensitivity;
+
+			yaw += xoffset;
+			pitch += yoffset;
+
+			// make sure that when pitch is out of bounds, screen doesn't get flipped
+			if (pitch > 89.0f)
+				pitch = 89.0f;
+			if (pitch < -89.0f)
+				pitch = -89.0f;
+
+			//For a FPS camera we can omit roll
+			glm::quat orientation = glm::quat(glm::vec3(pitch, yaw, 0));
+			camera.rotation = camera.rotation * orientation;
+			camera.rotation = glm::normalize(camera.rotation);
+
+			pitch = 0.0f;
+			yaw = 0.0f;
+		}
+		else {
+			firstMouse = true;
 		}
 
-		glm::mat4 view = glm::mat4(1);
-		//view = glm::rotate(view, camera.rotation);
-		view = glm::translate(view, camera.position);
+		view = (glm::mat4_cast(camera.rotation)) * glm::translate(view, camera.position);
 
 		physicsSystem.update(dt);
 		cube.update(dt);
@@ -307,8 +348,14 @@ int main()
 			ImGui::Text("counter = %d", counter);
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::Text("Mouse position is: %.3f , %.3f", xmouse, ymouse);
-			ImGui::Text("Camera: %.3f, %.3f, %.3f", camera.position.x, camera.position.y, camera.position.z);
+			ImGui::Text("Mouse position is: %.3f , %.3f", xmouse - SCREEN_WIDTH/2, ymouse - SCREEN_HEIGHT/2);
+			ImGui::Text("Camera position: %.3f, %.3f, %.3f", camera.position.x, camera.position.y, camera.position.z);
+			if (ImGui::Button("Reset"))
+				camera.position = glm::vec3(0,0,-10);
+			ImGui::Text("Camera rotation: %.3f, %.3f, %.3f, %.3f", camera.rotation.x, camera.rotation.y, camera.rotation.z, camera.rotation.w);
+			if (ImGui::Button("Boop"))
+				camera.rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
+			ImGui::Text("Pitch: %.3f, Yaw: %.3f", pitch, yaw);
 			ImGui::Text("Left Mouse: %s", mouseOne ? "true" : "false");
 			ImGui::Text("Right Mouse: %s", mouseTwo ? "true" : "false");
 			ImGui::End();
