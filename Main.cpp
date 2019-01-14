@@ -190,18 +190,18 @@ glm::quat Camera::GetOrientationQuat() const
 
 glm::vec3 Camera::GetFace() const {
 	glm::vec3 front;
-	front.x = cos(glm::radians(m_upAngle)) * sin(glm::radians(m_rightAngle));
-	front.y = sin(glm::radians(m_upAngle));
+	front.x = cos(glm::radians(m_upAngle)) * -sin(glm::radians(m_rightAngle));
+	front.y = -sin(glm::radians(m_upAngle));
 	front.z = cos(glm::radians(m_upAngle)) * cos(glm::radians(m_rightAngle));
 	return glm::normalize(front);
 }
 
 glm::vec3 Camera::GetUp() const {
-	return glm::vec3(0.0f, -1.0f, 0.0f); //Since we don't roll yet.
+	return glm::cross(GetFace(), GetRight());
 }
 
 glm::vec3 Camera::GetRight() const {
-	return glm::cross(GetFace(), GetUp());
+	return glm::cross(GetFace(), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 float Camera::GetUpAngle() const {
@@ -401,17 +401,18 @@ int main()
 			static int counter = 0;
 
 			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-			ImGui::SliderFloat("RightAngle", &camera.m_rightAngle, -45.0f, 90.0f);    
-			ImGui::SliderFloat("UpAngle", &camera.m_upAngle, -45.0f, 90.0f);
+			ImGui::Text("UpAngle: %.3f, RightAngle: %.3f", camera.GetUpAngle(), camera.GetRightAngle());
+			ImGui::SliderFloat("RightAngle", &camera.m_rightAngle, -90.0f, 90.0f);    
+			ImGui::SliderFloat("UpAngle", &camera.m_upAngle, -90.0f, 90.0f);
 			ImGui::SliderFloat("RedCube x:", &cube2.m_transform.position.x, -5.0f, 5.0f);
 			ImGui::SliderFloat("RedCube y:", &cube2.m_transform.position.y, -5.0f, 5.0f);
 			ImGui::SliderFloat("RedCube z:", &cube2.m_transform.position.z, -5.0f, 5.0f);
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::Text("Mouse position is: %.3f , %.3f", xmouse - SCREEN_WIDTH/2, ymouse - SCREEN_HEIGHT/2);
 			ImGui::Text("Camera position: %.3f, %.3f, %.3f", camera.position.x, camera.position.y, camera.position.z);
-			ImGui::SliderFloat("Position x: ", &camera.position.x, -100.0f, 100.0f);
-			ImGui::SliderFloat("Position y: ", &camera.position.y, -100.0f, 100.0f);
-			ImGui::SliderFloat("Position z: ", &camera.position.z, -100.0f, 100.0f);
+			ImGui::SliderFloat("Position x: ", &camera.position.x, -5.0f, 5.0f);
+			ImGui::SliderFloat("Position y: ", &camera.position.y, -5.0f, 5.0f);
+			ImGui::SliderFloat("Position z: ", &camera.position.z, -5.0f, 5.0f);
 			if (ImGui::Button("Reset"))
 				camera.position = glm::vec3(0,0,-10);
 			ImGui::Text("Camera rotation: %.3f, %.3f, %.3f, %.3f", camera.GetOrientationQuat().x, camera.GetOrientationQuat().y, camera.GetOrientationQuat().z, camera.GetOrientationQuat().w);
@@ -421,9 +422,10 @@ int main()
 			ImGui::Text("Face vector: %.3f, %.3f, %.3f", face.x, face.y, face.z);
 			glm::vec3 right = camera.GetRight();
 			ImGui::Text("Right vector: %.3f, %.3f, %.3f", right.x, right.y, right.z);
-			ImGui::Text("UpAngle: %.3f, RightAngle: %.3f", camera.GetUpAngle(), camera.GetRightAngle());
 			ImGui::Text("Left Mouse: %s", mouseOne ? "true" : "false");
 			ImGui::Text("Right Mouse: %s", mouseTwo ? "true" : "false");
+			glm::vec2 test = dcMath::Normalize(glm::vec2(-1, 1));
+			ImGui::Text("Test x: %f, y: %f", test.x, test.y);
 			ImGui::End();
 		}
 
