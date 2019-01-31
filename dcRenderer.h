@@ -74,6 +74,21 @@ namespace dcRender {
 		glm::vec3 m_center;
 	};
 
+	class LightCubeRenderer {
+	public:
+		LightCubeRenderer();
+		~LightCubeRenderer();
+		void init(glm::vec3 center, Shader* shader);
+		void draw(glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec3 color);
+		void destroy();
+	private:
+		GLuint m_VAO = 0;
+		GLuint m_VBO = 0;
+		Shader* m_shader = nullptr;
+
+		glm::vec3 m_center;
+	};
+
 	/* Text Rendering */
 	struct TextChar {
 		GLuint TextureID;

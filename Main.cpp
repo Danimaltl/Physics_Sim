@@ -85,13 +85,13 @@ class Cube {
 public:
 	Cube();
 	~Cube();
-	void init(glm::vec3 position, PhysicsComponent* p,glm::vec3 color);
+	void init(glm::vec3 position, PhysicsComponent* p, dcRender::Shader* shader, glm::vec3 color);
 	void update(float dt);
 	void draw(glm::mat4 view);
 	void destroy();
 	Transform m_transform;
 private:
-	dcRender::Shader m_shader;
+	dcRender::Shader* m_shader;
 	dcRender::CubeRenderer m_renderer;
 	PhysicsComponent* m_phys;
 	glm::vec3 m_color;
@@ -105,14 +105,15 @@ Cube::~Cube() {
 
 }
 
-void Cube::init(glm::vec3 position, PhysicsComponent* p, glm::vec3 color = glm::vec3(0.516f, 0.461f, 0.550f)) {
+void Cube::init(glm::vec3 position, PhysicsComponent* p, dcRender::Shader* shader, glm::vec3 color = glm::vec3(0.516f, 0.461f, 0.550f)) {
 	assert(p != nullptr);
 	m_phys = p;
 
-	m_shader.loadFromFile("cubeShape.vert", "cubeShape.frag");
-	m_shader.use();
+	assert(shader != nullptr);
+	m_shader = shader;
+	m_shader->use();
 
-	m_renderer.init(glm::vec3(0, 0, 0), &m_shader);
+	m_renderer.init(glm::vec3(0, 0, 0), m_shader);
 
 	m_transform.position = position;
 	m_transform.rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -130,7 +131,7 @@ void Cube::update(float dt) {
 }
 
 void Cube::draw(glm::mat4 view) {
-	m_shader.SetMatrix4("view", view);
+	m_shader->SetMatrix4("view", view);
 	m_renderer.draw(m_transform.position, m_transform.rotation, m_transform.scale, m_color);
 }
 
@@ -225,8 +226,7 @@ int main()
 	if (!glfwInit())
 		return 1;
 
-	// GL 3.0 + GLSL 130
-	const char* glsl_version = "#version 130";
+	const char* glsl_version = "#version 330";
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
@@ -253,11 +253,14 @@ int main()
 
 	PhysicsSystem physicsSystem;
 
+	dcRender::Shader cubeShader;
+	cubeShader.loadFromFile("lamp.vert", "lamp.frag");
 	Cube cube;
-	cube.init(glm::vec3(0.0f, -2.0f, 0.0f), &physicsSystem.entities[1]);
+
+	cube.init(glm::vec3(0.0f, -2.0f, 0.0f), &physicsSystem.entities[1], &cubeShader);
 
 	Cube cube2;
-	cube2.init(glm::vec3(0.0f, 2.0f, 0.0f), &physicsSystem.entities[0], glm::vec3(1.0f, 0.0f, 0.0f));
+	cube2.init(glm::vec3(0.0f, 2.0f, 0.0f), &physicsSystem.entities[0], &cubeShader, glm::vec3(1.0f, 0.0f, 0.0f));
 
 	sf::Clock clock;
 
@@ -293,6 +296,8 @@ int main()
 	float lastY = SCREEN_HEIGHT / 2;
 
 	bool firstMouse = true;
+
+	float ambientLight = 1.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{   
@@ -402,17 +407,18 @@ int main()
 
 			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 			ImGui::Text("UpAngle: %.3f, RightAngle: %.3f", camera.GetUpAngle(), camera.GetRightAngle());
+			ImGui::SliderFloat("Ambient level", &ambientLight, 0.0f, 1.0f);
 			ImGui::SliderFloat("RightAngle", &camera.m_rightAngle, -90.0f, 90.0f);    
 			ImGui::SliderFloat("UpAngle", &camera.m_upAngle, -90.0f, 90.0f);
-			ImGui::SliderFloat("RedCube x:", &cube2.m_transform.position.x, -5.0f, 5.0f);
-			ImGui::SliderFloat("RedCube y:", &cube2.m_transform.position.y, -5.0f, 5.0f);
-			ImGui::SliderFloat("RedCube z:", &cube2.m_transform.position.z, -5.0f, 5.0f);
+			ImGui::SliderFloat("RedCube x", &cube2.m_transform.position.x, -5.0f, 5.0f);
+			ImGui::SliderFloat("RedCube y", &cube2.m_transform.position.y, -5.0f, 5.0f);
+			ImGui::SliderFloat("RedCube z", &cube2.m_transform.position.z, -5.0f, 5.0f);
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::Text("Mouse position is: %.3f , %.3f", xmouse - SCREEN_WIDTH/2, ymouse - SCREEN_HEIGHT/2);
 			ImGui::Text("Camera position: %.3f, %.3f, %.3f", camera.position.x, camera.position.y, camera.position.z);
-			ImGui::SliderFloat("Position x: ", &camera.position.x, -5.0f, 5.0f);
-			ImGui::SliderFloat("Position y: ", &camera.position.y, -5.0f, 5.0f);
-			ImGui::SliderFloat("Position z: ", &camera.position.z, -5.0f, 5.0f);
+			ImGui::SliderFloat("Position x ", &camera.position.x, -5.0f, 5.0f);
+			ImGui::SliderFloat("Position y ", &camera.position.y, -5.0f, 5.0f);
+			ImGui::SliderFloat("Position z ", &camera.position.z, -5.0f, 5.0f);
 			if (ImGui::Button("Reset"))
 				camera.position = glm::vec3(0,0,-10);
 			ImGui::Text("Camera rotation: %.3f, %.3f, %.3f, %.3f", camera.GetOrientationQuat().x, camera.GetOrientationQuat().y, camera.GetOrientationQuat().z, camera.GetOrientationQuat().w);
@@ -437,6 +443,7 @@ int main()
 		glViewport(0, 0, display_w, display_h);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		cubeShader.SetFloat("ambientStrength", ambientLight);
 		cube.draw(view);
 		cube2.draw(view);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

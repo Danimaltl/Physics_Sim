@@ -94,5 +94,11 @@
     <None Include="cubeShape.vert">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="lamp.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="lamp.frag">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

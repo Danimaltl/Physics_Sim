@@ -373,7 +373,8 @@ void dcRender::CubeRenderer::draw(glm::vec3 position, glm::quat rotation, glm::v
 	model = glm::scale(model, scale);
 
 	m_shader->SetMatrix4("model", model);
-	m_shader->SetVector3("flatColor", color);
+	m_shader->SetVector3("objectColor", color);
+	m_shader->SetVector3("lightColor", glm::vec3(1.0f,1.0f,1.0f));
 
 	glBindVertexArray(m_VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -384,6 +385,126 @@ void dcRender::CubeRenderer::destroy() {
 	glDeleteVertexArrays(1, &m_VAO);
 	glDeleteBuffers(1, &m_VBO);
 }
+
+/* Cube Renderer */
+dcRender::LightCubeRenderer::LightCubeRenderer() {
+
+}
+
+dcRender::LightCubeRenderer::~LightCubeRenderer() {
+
+}
+
+void dcRender::LightCubeRenderer::init(glm::vec3 center, Shader* shader) {
+	m_shader = shader;
+	m_center = center;
+
+	// Create Vertex Array Object
+	glGenVertexArrays(1, &m_VAO);
+
+	// Create a Vertex Buffer Object and copy the vertex data to it
+	glGenBuffers(1, &m_VBO);
+
+	GLfloat vertices[] = {
+		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+
+		-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+		0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+		0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+
+		-0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+
+		0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+		0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+		0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+		0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindVertexArray(m_VAO);
+
+	m_shader->use();
+
+	// Specify the layout of the vertex data
+	GLint posAttrib = glGetAttribLocation(m_shader->getID(), "position");
+	glEnableVertexAttribArray(posAttrib);
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+
+	GLint colAttrib = glGetAttribLocation(m_shader->getID(), "color");
+	glEnableVertexAttribArray(colAttrib);
+	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+
+	// Set up projection
+	glm::mat4 view = glm::mat4(1);
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+	m_shader->SetMatrix4("view", view);
+
+	glm::mat4 proj = glm::mat4(1);
+	proj = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+	m_shader->SetMatrix4("proj", proj);
+}
+
+void dcRender::LightCubeRenderer::draw(glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec3 color) {
+	m_shader->use();
+
+	glm::mat4 model(1);
+
+	//translate to world position
+	model = glm::translate(model, glm::vec3(position - m_center));
+
+	//translate to center and rotate?
+	//model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
+	//model = glm::translate(model, glm::vec3(m_center.x * scale.x, m_center.y * scale.y, 0.0f));
+	model *= glm::toMat4(rotation);
+	//model = glm::translate(model, glm::vec3(-m_center.x * scale.x, -m_center.y * scale.y, 0.0f));
+	//model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f));
+
+	model = glm::scale(model, scale);
+
+	m_shader->SetMatrix4("model", model);
+	m_shader->SetVector3("flatColor", color);
+
+	glBindVertexArray(m_VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+}
+
+void dcRender::LightCubeRenderer::destroy() {
+	glDeleteVertexArrays(1, &m_VAO);
+	glDeleteBuffers(1, &m_VBO);
+}
+
 
 
 /* Text Renderer */

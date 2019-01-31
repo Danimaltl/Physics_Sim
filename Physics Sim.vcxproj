@@ -47,6 +47,8 @@
   <ItemGroup>
     <None Include="cubeShape.frag" />
     <None Include="cubeShape.vert" />
+    <None Include="lamp.frag" />
+    <None Include="lamp.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -111,7 +113,7 @@
     <Link>
       <AdditionalDependencies>sfml-main-d.lib;sfml-system-d.lib;sfml-audio-d.lib;sfml-window-d.lib;sfml-network-d.lib;sfml-graphics-d.lib;openal32.lib;%(AdditionalDependencies);opengl32.lib;glew32s.lib;glew32.lib;glfw3.lib;freetype.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Libraries\glfw-3.2.1.bin.WIN32\lib-vc2015;C:\Libraries\freetype\win32;C:\Libraries\glew-2.1.0\lib\Release\Win32;C:\Libraries\SFML-2.4.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
